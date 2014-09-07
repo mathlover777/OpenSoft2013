@@ -1,0 +1,57 @@
+Fragment mergeFragments(M):
+This module will merge 2 given fragments and will return A new fragment
+It does not matter whether the contours are clockwise or not … return sense will be same as Fragment A
+pointStartA = A.getPoint(startA)
+pointEndA = A.getPoint(endA)
+pointStartB = B.getPoint(startB)
+pointEndB = B.getPoint(endB)
+T = getTransformationMatix(pointStartB,pointStartA,pointEndB,pointEndA) // The Transformation Matrix to Transform Fragment B to Fragment A
+Fragment F // new Merged Fragment
+ /************* Merging the img lists **************************/
+for ( i = 0;i<A.noOfComponents();i++)
+      F.addImg(A.getImg(i))
+      F.addTransformationMatrix(A.getTransformationMatrix(i))
+for( i = 0;i<B.noOfComponents();i++)
+      F.addImg(A.getImg(i))
+      F.addMat(getTransformationMatrix(T,A.getTransformationMatrix(i))
+
+if (endA > startA and endB > startB) :
+      for(i = 0; i<=startA;i++):
+           F.addPoint(A.getPoint(i))
+      for(i = startB-1;i>=0;i--):
+           F.addPoint(getTransformedPoint(T,B.getPoint(i)))
+      for(i=B.pointCount() - 1;i>=endB;i--):
+           F.addPoint(getTransformedPoint(T,B.getPoint(i)))
+      for(i=endA+1;i<A.pointCount();i++):
+           F.addPoint(A.getPoint(i))
+      return F
+if (endA > startA and endB < startB) :
+      for(i = 0; i<startA;i++):
+           F.addPoint(A.getPoint(i))
+      for(i = startB;i<B.pointCount();i++):
+           F.addPoint(getTransformedPoint(T,B.getPoint(i)))
+      for(i=0;i<endB;i++):
+           F.addPoint(getTransformedPoint(T,B.getPoint(i)))
+      for(i=endA;i<A.pointCount();i++):
+           F.addPoint(A.getPoint(i))
+      return F
+if (endA < startA and endB > startB) :
+      for(i = 0; i<=endA;i++):
+           F.addPoint(A.getPoint(i))
+      for(i = endB+1;i<B.pointCount();i++):
+           F.addPoint(getTransformedPoint(T,B.getPoint(i)))
+      for(i=0;i<startB;i++):
+           F.addPoint(getTransformedPoint(T,B.getPoint(i)))
+      for(i=endA;i<A.pointCount();i++):
+           F.addPoint(A.getPoint(i))
+      return F
+if (endA < startA and endB < startB) :
+      for(i = 0; i<=endA;i++):
+           F.addPoint(A.getPoint(i))
+      for(i = endB-1;i>=0;i--):
+           F.addPoint(getTransformedPoint(T,B.getPoint(i)))
+      for(i=B.pointCount() - 1;i>startB;i--):
+           F.addPoint(getTransformedPoint(T,B.getPoint(i)))
+      for(i=startA;i<A.pointCount();i++):
+           F.addPoint(A.getPoint(i))
+      return F

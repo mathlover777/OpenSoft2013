@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 24
+/svn/msos_new/!svn/ver/4
+END
+.project
+K 25
+svn:wc:ra_dav:version-url
+V 33
+/svn/msos_new/!svn/ver/2/.project
+END
+readme.textile
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/msos_new/!svn/ver/1/readme.textile
+END
+.pydevproject
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/msos_new/!svn/ver/2/.pydevproject
+END

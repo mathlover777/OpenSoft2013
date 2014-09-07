@@ -1,0 +1,205 @@
+import sys
+import math
+import cv2
+import numpy as np
+import random
+import config
+from Fragment import *
+from transform import *
+# requires transform.py
+
+
+
+def getMergedFragment1(A,B,startA,endA,startB,endB,flag):
+	# print "WE ARE HERE"
+	# print "startA = ",startA,"endA = ",endA,"startB = ",startB,"endB = ",endB
+	T = getTransformationMatirxFromFragment(B,A,startB,endB,startA,endA,config.FRAGMENT)
+	
+	print T
+	dummy1,sizeA,dummy2 = A.points.shape
+	dummy1,sizeB,dummy2 = B.points.shape
+
+	if(flag == config.ENHANCEMODE):
+		startA,endA,startB,endB = findProperStartAndEndPoint(A,B,startA,endA,startB,endB,T)
+
+	Xnumpy = np.empty([1,sizeA+sizeB+2,2],np.int)
+	X = Xnumpy[0]
+	contourA = A.points[0]
+	contourB = B.points[0]
+
+	j = 0
+	if(endA > startA and endB > startB):
+		# print "FIRST CASE"
+		for i in range(0,startA+1):
+			X[j] = contourA[i]
+			j = j+1
+		for i in range(startB-1,-1,-1):
+			P = getTransformedPoint(T,contourB[i])
+			X[j] = P
+			j = j + 1
+		for i in range(sizeB-1,endB-1,-1):
+			P = getTransformedPoint(T,contourB[i])
+			X[j] = P
+			j = j + 1
+		for i in range(endA+1,sizeA):
+			X[j] = contourA[i]
+			j = j+1
+	if(endA > startA and endB < startB):
+		# print "2nd CASE"
+		for i in range(0,startA):
+			X[j] = contourA[i]
+			j = j+1
+		for i in range(startB,sizeB):
+			P = getTransformedPoint(T,contourB[i])
+			X[j] = P
+			j = j + 1
+		for i in range(0,endB):
+			P = getTransformedPoint(T,contourB[i])
+			X[j] = P
+			j = j + 1
+		for i in range(endA,sizeA):
+			X[j] = contourA[i]
+			j = j+1
+	if(endA < startA and endB > startB):
+		# print "3rd CASE"
+		for i in range(0,endA+1):
+			X[j] = contourA[i]
+			j = j+1
+		for i in range(endB+1,sizeB):
+			P = getTransformedPoint(T,contourB[i])
+			X[j] = P
+			j = j + 1
+		for i in range(0,startB):
+			P = getTransformedPoint(T,contourB[i])
+			X[j] = P
+			j = j + 1
+		for i in range(startA,sizeA):
+			X[j] = contourA[i]
+			j = j+1
+	if(endA < startA and endB < startB):
+		# print "4th CASE"
+		for i in range(0,endA):
+			X[j] = contourA[i]
+			j = j+1
+		for i in range(endB-1,-1,-1):
+			P = getTransformedPoint(T,contourB[i])
+			X[j] = P
+			j = j + 1
+		for i in range(sizeB-1,startB,-1):
+			P = getTransformedPoint(T,contourB[i])
+			X[j] = P
+			j = j + 1
+		for i in range(startA,sizeA):
+			X[j] = contourA[i]
+			j = j+1
+	# now j is the number of points on the new contour
+	
+	F = Fragment()
+	F.points = np.empty([1,j,2],np.int)
+	for i in range(0,j):
+		F.points[0][i] = X[i]
+	
+	# for i in range(0,A.images.length):
+	# 	name = A.images[i].name
+	# 	transform_matrix = A.images[i].transform_matrix
+	# 	F.images.append(Image(name,transform_matrix))
+
+	# for i in range(0,B.images.length):
+	# 	name = B.images[i].name
+	# 	transform_matrix = B.images[i].transform_matrix
+	# 	F.images.append(Image(name,T * transform_matrix))
+
+	return F
+
+def srinivasFragmentToSouravFragment(As):
+	A = Fragment()
+	sizeA = len(As.points)
+	A.points = np.empty([1,sizeA,2],np.int)
+	for i in range(0,sizeA):
+		A.points[0][i] = As.points[i]
+	A.turning_angles = As.turning_angles
+	A.images = As.images
+	return A
+	
+
+def getMergedFragment(As,Bs,startA,endA,startB,endB,flag,convert):
+	
+	A = srinivasFragmentToSouravFragment(As)
+	B = srinivasFragmentToSouravFragment(Bs)
+	
+	X =  getMergedFragment1(A,B,startA,endA,startB,endB,flag)
+	
+	return X
+#	return souravFragmentToSrinivasFragment(X)
+
+def getBoundingPointSofFragment(A):
+	X = A.points[0]
+	dummy1,sizeA,dummy2 = A.points.shape
+
+	leftMost = X[0]
+	rightMost = X[0]
+	upMost = X[0]
+	downMost = X[0]
+
+	for i in range(0,sizeA):
+		if(X[i][0] < leftMost[0]):
+			leftMost = X[i]
+		if(X[i][0] > rightMost[0]):
+			rightMost = X[i]
+		if(X[i][1] < downMost[1]):
+			downMost = X[i]
+		if(X[i][1] > upMost[1]):
+			upMost = X[i]
+	return leftMost,rightMost,upMost,downMost
+
+def getDimension(leftMost,rightMost,upMost,downMost):
+	height = int(math.fabs(leftMost[0]-rightMost[0]))
+	width = int(math.fabs(upMost[1]-downMost[1]))
+	return height+config.MARGIN*4,width+config.MARGIN*4
+
+def getFinalTranslationMatrix(leftMost,rightMost,upMost,downMost):
+	if(leftMost[0]<=0):
+		tx = int(math.fabs(leftMost[0])) + 1
+	else:
+		tx = 1
+	if(downMost[1]<=0):
+		ty = int(math.fabs(downMost[1])) + 1
+	return getSampleTransformationMatrix(0,tx,ty)
+
+def combineAndAddImages(A,height,width):
+	# code to blindly create a recombined image
+	image = np.zeros((height,width,1),np.uint8)
+	
+
+	# M = np.float32([[1,0,100],[0,1,50]])
+	# dst = cv2.warpAffine(img,M,(cols,rows))
+
+	for i in range(0,A.images.length):
+		img_i = cv2.imread(A.images[i].name)
+		rows,cols = img_i.shape
+		T = threeD_to_TwoD_Affine(A.images[i].transform_matrix)
+		image = cv2.add(image,cv2.warpAffine(img_i,T,(cols,rows)))	
+	
+	return image
+
+def createFinalImage(A):
+	leftMost,rightMost,upMost,downMost = getBoundingPointSofFragment(A)
+	height,width = getDimension(leftMost,rightMost,upMost,downMost)
+
+	T = getFinalTranslationMatrix(leftMost,rightMost,upMost,downMost)
+	for i in range(0,A.images.length):
+		A.images[i].transform_matrix = T * A.images[i].transform_matrix
+
+	return combineAndAddImages(A,height,width)
+
+def displayContour(imgname,contour,height,width):
+	img = np.zeros((height,width,1),np.uint8)
+	cv2.drawContours(img,contour,-1,255,1)
+	cv2.imshow(imgname,img)
+	return
+
+def waitForESC():
+	k=cv2.waitKey(0)
+	if(k==27):
+		cv2.destroyAllWindows()
+	return

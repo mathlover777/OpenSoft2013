@@ -1,0 +1,51 @@
+import Matchset
+from SmithWaterman import *
+from transform import *
+
+#to do list: CompareContour function as implemented by srini
+def GetCandidateMatchSet(F):
+<<<<<<< .mine
+	W = len(F)
+	print str(W) + "matchset"
+	MatchList = []
+	Max=None
+	for i in range(0,W):
+		for j in range(i,W):
+			# print "\nIN GET CANDIDATE MATCH : i = ",i," J = ",j
+			if i!=j:
+				m = CompareContour(F[i],F[j])
+				#def isMatchPossible(A,B,startA,endA,startB,endB):
+				
+				if Max is None or m.score>Max.score:
+					if isMatchPossible(m.fragment_1,m.fragment_2,m.match_1_start,m.match_1_end,m.match_2_start,m.match_2_end):
+						m.i=i
+						m.j=j
+						print m.score
+						Max=m
+					
+		if Max is not None:
+			MatchList.append(Max)
+	return MatchList
+=======
+    W = len(F)
+    print str(W) + "matchset"
+    MatchList = []
+    Max=None
+    for i in range(0,W):
+        Max = None
+        for j in range(i,W):
+            if i!=j:
+                m = CompareContour(F[i],F[j])
+                #def isMatchPossible(A,B,startA,endA,startB,endB):
+                
+                if Max is None or m.score>Max.score:
+                    if isMatchPossible(m.fragment_1,m.fragment_2,m.match_1_start,m.match_1_end,m.match_2_start,m.match_2_end):
+                        m.i=i
+                        m.j=j
+                        print m.score
+                        Max=m
+                    
+        if Max is not None:
+            MatchList.append(Max)
+    return MatchList
+>>>>>>> .r116
